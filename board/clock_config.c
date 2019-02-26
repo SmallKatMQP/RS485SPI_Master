@@ -48,22 +48,22 @@ void BOARD_InitBootClocks(void)
 name: BOARD_BootClockIRC12M
 called_from_default_init: true
 outputs:
-- {id: ADC_clock.outFreq, value: 30 MHz}
-- {id: I2C0_clock.outFreq, value: 30 MHz}
-- {id: I2C1_clock.outFreq, value: 30 MHz}
-- {id: I2C2_clock.outFreq, value: 30 MHz}
-- {id: I2C3_clock.outFreq, value: 30 MHz}
+- {id: ADC_clock.outFreq, value: 12 MHz}
+- {id: I2C0_clock.outFreq, value: 12 MHz}
+- {id: I2C1_clock.outFreq, value: 12 MHz}
+- {id: I2C2_clock.outFreq, value: 12 MHz}
+- {id: I2C3_clock.outFreq, value: 12 MHz}
 - {id: LowPower_clock.outFreq, value: 10 kHz}
-- {id: SPI0_clock.outFreq, value: 30 MHz}
-- {id: SPI1_clock.outFreq, value: 30 MHz}
-- {id: SYSPLL_clock.outFreq, value: 60 MHz}
-- {id: System_clock.outFreq, value: 30 MHz}
+- {id: SPI0_clock.outFreq, value: 12 MHz}
+- {id: SPI1_clock.outFreq, value: 12 MHz}
+- {id: SYSPLL_clock.outFreq, value: 84 MHz}
+- {id: System_clock.outFreq, value: 12 MHz}
 - {id: divto750k_clock.outFreq, value: 750 kHz}
 settings:
-- {id: SYSCON.MAINCLKSEL.sel, value: SYSCON.PLL}
-- {id: SYSCON.M_MULT.scale, value: '5', locked: true}
+- {id: SYSCON.M_MULT.scale, value: '7', locked: true}
 - {id: SYSCON.N_DIV.scale, value: '1', locked: true}
-- {id: SYSCON.SYSAHBCLKDIV.scale, value: '2'}
+- {id: SYSCON.SYSAHBCLKDIV.scale, value: '1', locked: true}
+- {id: SYSCON.USARTCLKDIV.scale, value: '0', locked: true}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 
 /*******************************************************************************
@@ -82,11 +82,11 @@ void BOARD_BootClockIRC12M(void)
     CLOCK_Select(kSYSPLL_From_Irc);                         /*!< set IRC to pll select */
     clock_sys_pll_t config;
     config.src = kCLOCK_SysPllSrcIrc;                           /*!< set pll src  */
-    config.targetFreq = 60000000U;                     /*!< set pll target freq */
+    config.targetFreq = 84000000U;                     /*!< set pll target freq */
     CLOCK_InitSystemPll(&config);                           /*!< set parameters */
-    CLOCK_SetMainClkSrc(kCLOCK_MainClkSrcSysPll);         /*!< select syspll for main clock */
+    CLOCK_SetMainClkSrc(kCLOCK_MainClkSrcIrc);            /*!< select irc for main clock */
     CLOCK_Select(kCLKOUT_From_Irc);                         /*!< select IRC for CLKOUT */
-    CLOCK_SetCoreSysClkDiv(2U);
+    CLOCK_SetCoreSysClkDiv(1U);
     /*!< Set SystemCoreClock variable. */
     SystemCoreClock = BOARD_BOOTCLOCKIRC12M_CORE_CLOCK;
 }

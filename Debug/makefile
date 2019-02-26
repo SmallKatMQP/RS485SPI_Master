@@ -29,25 +29,25 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: RS485SPI.axf
+all: RS485SPIMaster.axf
 
 # Tool invocations
-RS485SPI.axf: $(OBJS) $(USER_OBJS)
+RS485SPIMaster.axf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU Linker'
-	arm-none-eabi-gcc -nostdlib -Xlinker -Map="RS485SPI.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -mcpu=cortex-m0plus -mthumb -T "RS485SPI_Debug.ld" -o "RS485SPI.axf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -nostdlib -Xlinker -Map="RS485SPIMaster.map" -Xlinker --gc-sections -Xlinker -print-memory-usage -Xlinker --sort-section=alignment -mcpu=cortex-m0plus -mthumb -T "RS485SPIMaster_Debug.ld" -o "RS485SPIMaster.axf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build
 
 # Other Targets
 clean:
-	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) RS485SPI.axf
+	-$(RM) $(EXECUTABLES)$(OBJS)$(C_DEPS) RS485SPIMaster.axf
 	-@echo ' '
 
 post-build:
 	-@echo 'Performing post-build steps'
-	-arm-none-eabi-size "RS485SPI.axf"; # arm-none-eabi-objcopy -v -O binary "RS485SPI.axf" "RS485SPI.bin" ; # checksum -p LPC824 -d "RS485SPI.bin";
+	-arm-none-eabi-size "RS485SPIMaster.axf"; # arm-none-eabi-objcopy -v -O binary "RS485SPIMaster.axf" "RS485SPIMaster.bin" ; # checksum -p LPC824 -d "RS485SPIMaster.bin";
 	-@echo ' '
 
 .PHONY: all clean dependents post-build

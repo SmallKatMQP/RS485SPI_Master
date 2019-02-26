@@ -73,13 +73,14 @@ void BOARD_InitBootPins(void)
 BOARD_InitPins:
 - options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
 - pin_list:
-  - {pin_num: '29', peripheral: USART1, signal: RXD, pin_signal: PIO0_20/ADC_6}
-  - {pin_num: '27', peripheral: USART1, signal: TXD, pin_signal: PIO0_22/ADC_4}
-  - {pin_num: '28', peripheral: GPIO, signal: 'PIO0, 21', pin_signal: PIO0_21/ADC_5, direction: OUTPUT}
-  - {pin_num: '14', peripheral: SPI0, signal: SSEL0, pin_signal: PIO0_24, direction: OUTPUT}
+  - {pin_num: '29', peripheral: USART0, signal: RXD, pin_signal: PIO0_20/ADC_6}
+  - {pin_num: '27', peripheral: USART0, signal: TXD, pin_signal: PIO0_22/ADC_4}
+  - {pin_num: '28', peripheral: GPIO, signal: 'PIO0, 21', pin_signal: PIO0_21/ADC_5, direction: OUTPUT, gpio_init_state: 'false', mode: pullDown}
   - {pin_num: '13', peripheral: SPI0, signal: SCK, pin_signal: PIO0_25, direction: OUTPUT, clkdiv: div2}
   - {pin_num: '12', peripheral: SPI0, signal: MOSI, pin_signal: PIO0_26, direction: OUTPUT}
   - {pin_num: '11', peripheral: SPI0, signal: MISO, pin_signal: PIO0_27, direction: INPUT}
+  - {pin_num: '14', peripheral: GPIO, signal: 'PIO0, 24', pin_signal: PIO0_24, identifier: ''}
+  - {pin_num: '15', peripheral: SPI0, signal: SSEL0, pin_signal: PIO0_15}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -98,6 +99,14 @@ void BOARD_InitPins(void)
     /* Enables clock for switch matrix.: Enable. */
     CLOCK_EnableClock(kCLOCK_Swm);
 
+    GPIO->CLR[0] = ((GPIO->CLR[0] &
+                     /* Mask bits to zero which are setting */
+                     (~(GPIO_CLR_CLRP_MASK)))
+
+                    /* Clear output bits (bit 0 = PIOn_0, bit 1 = PIOn_1, etc.). Supported pins depends on the specific
+                     * device and package. 0 = No operation. 1 = Clear output bit.: 0x200000u */
+                    | GPIO_CLR_CLRP(0x200000u));
+
     GPIO->DIR[0] = ((GPIO->DIR[0] &
                      /* Mask bits to zero which are setting */
                      (~(GPIO_DIR_DIRP_MASK)))
@@ -105,6 +114,14 @@ void BOARD_InitPins(void)
                     /* Selects pin direction for pin PIOm_n (bit 0 = PIOn_0, bit 1 = PIOn_1, etc.). Supported pins
                      * depends on the specific device and package. 0 = input. 1 = output.: 0x200000u */
                     | GPIO_DIR_DIRP(0x200000u));
+
+    IOCON->PIO[27] = ((IOCON->PIO[27] &
+                       /* Mask bits to zero which are setting */
+                       (~(IOCON_PIO_MODE_MASK)))
+
+                      /* Selects function mode (on-chip pull-up/pull-down resistor control).: Pull-down. Pull-down
+                       * resistor enabled. */
+                      | IOCON_PIO_MODE(PIO0_21_MODE_PULL_DOWN));
 
     IOCON->PIO[23] = ((IOCON->PIO[23] &
                        /* Mask bits to zero which are setting */
@@ -114,11 +131,11 @@ void BOARD_InitPins(void)
                        * IOCONCLKDIV2 */
                       | IOCON_PIO_CLK_DIV(PIO0_25_CLK_DIV_0b010));
 
-    /* USART1_TXD connect to P0_22 */
-    SWM_SetMovablePinSelect(SWM0, kSWM_USART1_TXD, kSWM_PortPin_P0_22);
+    /* USART0_TXD connect to P0_22 */
+    SWM_SetMovablePinSelect(SWM0, kSWM_USART0_TXD, kSWM_PortPin_P0_22);
 
-    /* USART1_RXD connect to P0_20 */
-    SWM_SetMovablePinSelect(SWM0, kSWM_USART1_RXD, kSWM_PortPin_P0_20);
+    /* USART0_RXD connect to P0_20 */
+    SWM_SetMovablePinSelect(SWM0, kSWM_USART0_RXD, kSWM_PortPin_P0_20);
 
     /* SPI0_SCK connect to P0_25 */
     SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_SCK, kSWM_PortPin_P0_25);
@@ -129,8 +146,8 @@ void BOARD_InitPins(void)
     /* SPI0_MISO connect to P0_27 */
     SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_MISO, kSWM_PortPin_P0_27);
 
-    /* SPI0_SSEL0 connect to P0_24 */
-    SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_SSEL0, kSWM_PortPin_P0_24);
+    /* SPI0_SSEL0 connect to P0_15 */
+    SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_SSEL0, kSWM_PortPin_P0_15);
 
     /* Disable clock for switch matrix. */
     CLOCK_DisableClock(kCLOCK_Swm);

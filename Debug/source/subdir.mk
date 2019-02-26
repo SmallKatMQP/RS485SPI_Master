@@ -4,17 +4,17 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../source/LPC824_Project.c \
+../source/RS485SPIMaster.c \
 ../source/mtb.c \
 ../source/semihost_hardfault.c 
 
 OBJS += \
-./source/LPC824_Project.o \
+./source/RS485SPIMaster.o \
 ./source/mtb.o \
 ./source/semihost_hardfault.o 
 
 C_DEPS += \
-./source/LPC824_Project.d \
+./source/RS485SPIMaster.d \
 ./source/mtb.d \
 ./source/semihost_hardfault.d 
 

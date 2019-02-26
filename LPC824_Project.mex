@@ -78,16 +78,13 @@
                   </dependency>
                </dependencies>
                <pins>
-                  <pin peripheral="USART1" signal="RXD" pin_num="29" pin_signal="PIO0_20/ADC_6"/>
-                  <pin peripheral="USART1" signal="TXD" pin_num="27" pin_signal="PIO0_22/ADC_4"/>
+                  <pin peripheral="USART0" signal="RXD" pin_num="29" pin_signal="PIO0_20/ADC_6"/>
+                  <pin peripheral="USART0" signal="TXD" pin_num="27" pin_signal="PIO0_22/ADC_4"/>
                   <pin peripheral="GPIO" signal="PIO0, 21" pin_num="28" pin_signal="PIO0_21/ADC_5">
                      <pin_features>
                         <pin_feature name="direction" value="OUTPUT"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="SPI0" signal="SSEL0" pin_num="14" pin_signal="PIO0_24">
-                     <pin_features>
-                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="gpio_init_state" value="false"/>
+                        <pin_feature name="mode" value="pullDown"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="SPI0" signal="SCK" pin_num="13" pin_signal="PIO0_25">
@@ -106,6 +103,12 @@
                         <pin_feature name="direction" value="INPUT"/>
                      </pin_features>
                   </pin>
+                  <pin peripheral="GPIO" signal="PIO0, 24" pin_num="14" pin_signal="PIO0_24">
+                     <pin_features>
+                        <pin_feature name="identifier" value=""/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="SPI0" signal="SSEL0" pin_num="15" pin_signal="PIO0_15"/>
                </pins>
             </function>
             <function name="BOARD_InitLEDsPins">
@@ -286,23 +289,23 @@
                </dependencies>
                <clock_sources/>
                <clock_outputs>
-                  <clock_output id="ADC_clock.outFreq" value="30 MHz" locked="false" accuracy=""/>
-                  <clock_output id="I2C0_clock.outFreq" value="30 MHz" locked="false" accuracy=""/>
-                  <clock_output id="I2C1_clock.outFreq" value="30 MHz" locked="false" accuracy=""/>
-                  <clock_output id="I2C2_clock.outFreq" value="30 MHz" locked="false" accuracy=""/>
-                  <clock_output id="I2C3_clock.outFreq" value="30 MHz" locked="false" accuracy=""/>
+                  <clock_output id="ADC_clock.outFreq" value="12 MHz" locked="false" accuracy=""/>
+                  <clock_output id="I2C0_clock.outFreq" value="12 MHz" locked="false" accuracy=""/>
+                  <clock_output id="I2C1_clock.outFreq" value="12 MHz" locked="false" accuracy=""/>
+                  <clock_output id="I2C2_clock.outFreq" value="12 MHz" locked="false" accuracy=""/>
+                  <clock_output id="I2C3_clock.outFreq" value="12 MHz" locked="false" accuracy=""/>
                   <clock_output id="LowPower_clock.outFreq" value="10 kHz" locked="false" accuracy=""/>
-                  <clock_output id="SPI0_clock.outFreq" value="30 MHz" locked="false" accuracy=""/>
-                  <clock_output id="SPI1_clock.outFreq" value="30 MHz" locked="false" accuracy=""/>
-                  <clock_output id="SYSPLL_clock.outFreq" value="60 MHz" locked="false" accuracy=""/>
-                  <clock_output id="System_clock.outFreq" value="30 MHz" locked="false" accuracy=""/>
+                  <clock_output id="SPI0_clock.outFreq" value="12 MHz" locked="false" accuracy=""/>
+                  <clock_output id="SPI1_clock.outFreq" value="12 MHz" locked="false" accuracy=""/>
+                  <clock_output id="SYSPLL_clock.outFreq" value="84 MHz" locked="false" accuracy=""/>
+                  <clock_output id="System_clock.outFreq" value="12 MHz" locked="false" accuracy=""/>
                   <clock_output id="divto750k_clock.outFreq" value="750 kHz" locked="false" accuracy=""/>
                </clock_outputs>
                <clock_settings>
-                  <setting id="SYSCON.MAINCLKSEL.sel" value="SYSCON.PLL" locked="false"/>
-                  <setting id="SYSCON.M_MULT.scale" value="5" locked="true"/>
+                  <setting id="SYSCON.M_MULT.scale" value="7" locked="true"/>
                   <setting id="SYSCON.N_DIV.scale" value="1" locked="true"/>
-                  <setting id="SYSCON.SYSAHBCLKDIV.scale" value="2" locked="false"/>
+                  <setting id="SYSCON.SYSAHBCLKDIV.scale" value="1" locked="true"/>
+                  <setting id="SYSCON.USARTCLKDIV.scale" value="0" locked="true"/>
                </clock_settings>
                <called_from_default_init>true</called_from_default_init>
             </clock_configuration>

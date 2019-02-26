@@ -38,13 +38,20 @@ extern "C" {
 void BOARD_InitBootPins(void);
 
 /*!
+ * @brief
+ * Selects function mode (on-chip pull-up/pull-down resistor control).
+ * : Pull-down.
+ * Pull-down resistor enabled.
+ */
+#define PIO0_21_MODE_PULL_DOWN 0x01u
+/*!
  * @brief Select peripheral clock divider for input filter sampling clock. Value 0x7 is reserved.: IOCONCLKDIV2 */
 #define PIO0_25_CLK_DIV_0b010 0x02u
 
 /*! @name PIO0_20 (number 29), P3[20]/J5[6]/P0_20-ADC6
   @{ */
-#define BOARD_INITPINS_RX_PERIPHERAL USART1               /*!<@brief Device name: USART1 */
-#define BOARD_INITPINS_RX_SIGNAL RXD                      /*!<@brief USART1 signal: RXD */
+#define BOARD_INITPINS_RX_PERIPHERAL USART0               /*!<@brief Device name: USART0 */
+#define BOARD_INITPINS_RX_SIGNAL RXD                      /*!<@brief USART0 signal: RXD */
 #define BOARD_INITPINS_RX_PORT 0U                         /*!<@brief PORT device name: 0U */
 #define BOARD_INITPINS_RX_PIN 20U                         /*!<@brief 0U pin index: 20 */
 #define BOARD_INITPINS_RX_PIN_NAME PIO0_20                /*!<@brief Pin name */
@@ -54,8 +61,8 @@ void BOARD_InitBootPins(void);
 
 /*! @name PIO0_22 (number 27), P3[18]/J5[4]/P0_22-ADC4
   @{ */
-#define BOARD_INITPINS_TX_PERIPHERAL USART1               /*!<@brief Device name: USART1 */
-#define BOARD_INITPINS_TX_SIGNAL TXD                      /*!<@brief USART1 signal: TXD */
+#define BOARD_INITPINS_TX_PERIPHERAL USART0               /*!<@brief Device name: USART0 */
+#define BOARD_INITPINS_TX_SIGNAL TXD                      /*!<@brief USART0 signal: TXD */
 #define BOARD_INITPINS_TX_PORT 0U                         /*!<@brief PORT device name: 0U */
 #define BOARD_INITPINS_TX_PIN 22U                         /*!<@brief 0U pin index: 22 */
 #define BOARD_INITPINS_TX_PIN_NAME PIO0_22                /*!<@brief Pin name */
@@ -76,18 +83,6 @@ void BOARD_InitBootPins(void);
 #define BOARD_INITPINS_DIR_LABEL "P3[19]/J5[5]/P0_21-ADC5"    /*!<@brief Label */
 #define BOARD_INITPINS_DIR_NAME "DIR"                         /*!<@brief Identifier name */
 #define BOARD_INITPINS_DIR_DIRECTION kPIN_MUX_DirectionOutput /*!<@brief Direction */
-                                                              /* @} */
-
-/*! @name PIO0_24 (number 14), P3[7]/J1[5]/P4[7]/P0_24-SCK
-  @{ */
-#define BOARD_INITPINS_CS_PERIPHERAL SPI0                     /*!<@brief Device name: SPI0 */
-#define BOARD_INITPINS_CS_SIGNAL SSEL0                        /*!<@brief SPI0 signal: SSEL0 */
-#define BOARD_INITPINS_CS_PORT 0U                             /*!<@brief PORT device name: 0U */
-#define BOARD_INITPINS_CS_PIN 24U                             /*!<@brief 0U pin index: 24 */
-#define BOARD_INITPINS_CS_PIN_NAME PIO0_24                    /*!<@brief Pin name */
-#define BOARD_INITPINS_CS_LABEL "P3[7]/J1[5]/P4[7]/P0_24-SCK" /*!<@brief Label */
-#define BOARD_INITPINS_CS_NAME "CS"                           /*!<@brief Identifier name */
-#define BOARD_INITPINS_CS_DIRECTION kPIN_MUX_DirectionOutput  /*!<@brief Direction */
                                                               /* @} */
 
 /*! @name PIO0_25 (number 13), P3[6]/J1[6]/P4[5]/P0_25-MISO

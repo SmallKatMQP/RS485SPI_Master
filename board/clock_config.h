@@ -33,7 +33,7 @@ void BOARD_InitBootClocks(void);
 /*******************************************************************************
  * Definitions for BOARD_BootClockIRC12M configuration
  ******************************************************************************/
-#define BOARD_BOOTCLOCKIRC12M_CORE_CLOCK           30000000U  /*!< Core clock frequency: 30000000Hz */
+#define BOARD_BOOTCLOCKIRC12M_CORE_CLOCK           12000000U  /*!< Core clock frequency: 12000000Hz */
 
 
 /*******************************************************************************

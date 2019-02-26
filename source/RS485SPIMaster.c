@@ -45,16 +45,16 @@
 #include "pin_mux.h"
 #include <stdbool.h>
 
-#define USART USART1
-//#define EXAMPLE_USART_CLK_SRC kCLOCK_MainClk
-//#define EXAMPLE_USART_CLK_FREQ CLOCK_GetFreq(EXAMPLE_USART_CLK_SRC)
+#define USART USART0
+#define EXAMPLE_USART_CLK_SRC kCLOCK_PllOut
+#define USART_CLK_FREQ CLOCK_GetFreq(EXAMPLE_USART_CLK_SRC)
 
-#define ECHO_BUFFER_LENGTH 5
+#define ECHO_BUFFER_LENGTH 6
 #define BUFFER_SIZE 5
 #define SPI_MASTER SPI0
 #define CLK_SRC kCLOCK_MainClk
 #define SPI_MASTER_CLK_FREQ CLOCK_GetFreq(CLK_SRC)
-#define SPI_MASTER_BAUDRATE 6000000//500000U
+#define SPI_MASTER_BAUDRATE 500000U//500000U
 #define SPI_MASTER_SSEL kSPI_Ssel0Assert
 
 #define SPI_MASTER_DMA_BASEADDR DMA0
@@ -78,14 +78,13 @@ static void MasterStartDMATransfer(void);
 usart_handle_t g_usartHandle;
 uint8_t g_tipString[] = "Usart interrupt transfer example.\r\nBoard receives 8 characters then sends them out.\r\nNow please input:\r\n";
 
-uint16_t Uart_TxBuffer[ECHO_BUFFER_LENGTH] = {0};
-uint16_t Uart_RxBuffer[ECHO_BUFFER_LENGTH] = {0};
+uint8_t Uart_TxBuffer[ECHO_BUFFER_LENGTH] = {0};
+uint8_t Uart_RxBuffer[6] = {0};
 volatile bool rxBufferEmpty = true;
 volatile bool txBufferFull = false;
 volatile bool txOnGoing = false;
 volatile bool rxOnGoing = false;
 
-usart_transfer_t xfer;
 usart_transfer_t sendXfer;
 usart_transfer_t receiveXfer;
 dma_handle_t masterTxHandle;
@@ -95,11 +94,14 @@ static volatile bool masterTxFinished = false;
 static volatile bool masterRxFinished = false;
 
 SDK_ALIGN(dma_descriptor_t txDescriptor, 16) = {0};
+SDK_ALIGN(uint32_t lastData, 4) = 0U;
 
 
-static uint16_t MotorUpdate[BUFFER_SIZE];
-static uint16_t MotorData[BUFFER_SIZE];
 
+uint16_t ShiftedBuffer_16[6] = {0};
+
+static uint16_t MotorUpdate[BUFFER_SIZE] = {0x00, 0x00, 0x00, 0x00, 0x00};
+static uint16_t MotorData[BUFFER_SIZE] = {0x01, 0x01, 0x01, 0x01, 0x01};
 
 uint16_t devID = 0;
 
@@ -107,6 +109,7 @@ uint16_t devID = 0;
 static void SPI_DmaTxCallback(dma_handle_t *handle, void *param, bool transferDone, uint32_t tcds)
 {
 	masterTxFinished = true;
+	GPIO_PinWrite(GPIO, 0, 24, 1);
 }
 
 static void SPI_DmaRxCallback(dma_handle_t *handle, void *param, bool transferDone, uint32_t tcds)
@@ -120,7 +123,7 @@ static void USARTUserCallback(USART_Type *base, usart_handle_t *handle, status_t
 
 	if (kStatus_USART_TxIdle == status)
 	{
-		GPIO_PinWrite(GPIO, 0, 22, 0); //set dir pin low
+		GPIO_PinWrite(GPIO, 0, 21, 0); //set dir pin low
 		USART_TransferReceiveNonBlocking(USART, &g_usartHandle, &receiveXfer, NULL);
 
 
@@ -129,36 +132,74 @@ static void USARTUserCallback(USART_Type *base, usart_handle_t *handle, status_t
 
 	if (kStatus_USART_RxIdle == status)
 	{
+		int i = 0;
 		if(Uart_RxBuffer[0] == devID){
-			memcpy(MotorUpdate, Uart_RxBuffer, ECHO_BUFFER_LENGTH);//copy
-			memcpy(Uart_TxBuffer, MotorData, ECHO_BUFFER_LENGTH);
+			MotorUpdate[0] = Uart_RxBuffer[0];
+			MotorUpdate[1] = Uart_RxBuffer[1];
+			MotorUpdate[2] = Uart_RxBuffer[2]<<8|Uart_RxBuffer[3];
+			MotorUpdate[3] = Uart_RxBuffer[4];
+			MotorUpdate[4] = Uart_RxBuffer[5];
+
+
+			//			Uart_TxBuffer[0] = MotorData[0];
+			//			Uart_TxBuffer[1] = MotorData[1];
+			//			Uart_TxBuffer[2] = MotorData[2]>>8;
+			//			Uart_TxBuffer[3] = (uint8_t)MotorData[2];
+			//			Uart_TxBuffer[4] = MotorData[4];
+			//			Uart_TxBuffer[5] = MotorData[5];
 			MasterStartDMATransfer();
-			GPIO_PinWrite(GPIO, 0, 22, 1); //set dir pin high
+			//USART_TransferReceiveNonBlocking(USART, &g_usartHandle, &receiveXfer, NULL);
+			GPIO_PinWrite(GPIO, 0, 21, 1); //set dir pin low
+
 			USART_TransferSendNonBlocking(USART, &g_usartHandle, &sendXfer);
 		}
-		else
-			return;
+		else{
 
+
+
+			return;
+		}
 	}
 }
 
 int main(void) {
 
 	/* Init board hardware. */
+
 	CLOCK_EnableClock(kCLOCK_Spi0);
+	/* Enable clock of uart0. */
+	CLOCK_EnableClock(kCLOCK_Uart0);
+	/* Ser DIV of uart0. */
+	CLOCK_SetClkDivider(kCLOCK_DivUsartClk,1U);
+
+
 
 	BOARD_InitBootPins();
 	BOARD_InitBootClocks();
 	BOARD_InitBootPeripherals();
-	/* Init FSL debug console. */
-	BOARD_InitDebugConsole();
+	gpio_pin_config_t CS = {
+			kGPIO_DigitalOutput, 0,
+	};
+	gpio_pin_config_t DIR = {
+			kGPIO_DigitalOutput, 0,
+	};
+	GPIO_PortInit(GPIO, 0);
+
+	GPIO_PortInit(GPIO, 0);
+	GPIO_PinInit(GPIO, 0, 24, &CS);
+	GPIO_PinWrite(GPIO, 0, 24, 1);
 	USARTInit();
+	GPIO_PinInit(GPIO, 0, 21, &DIR);
+	GPIO_PinWrite(GPIO, 0, 21, 0);
 	USARTPrepareTransfer();
 
 	SPIMasterInit();
 
 	/* Set up DMA configuration. */
 	MasterDMASetup();
+
+	MasterStartDMATransfer();
+
 	USART_TransferReceiveNonBlocking(USART, &g_usartHandle, &receiveXfer, NULL);
 
 
@@ -184,30 +225,27 @@ static void USARTInit(void)
 	 * config.syncMode = kUSART_SyncModeDisabled;
 	 */
 	USART_GetDefaultConfig(&config);
-	config.baudRate_Bps = 115200;
+	config.baudRate_Bps = 1843200;
 	config.enableRx = true;
 	config.enableTx = true;
 
 	/* Initialize the USART with configuration. */
-	USART_Init(USART, &config, 0);
+	USART_Init(USART, &config, USART_CLK_FREQ);
 }
 
 static void USARTPrepareTransfer(void)
 {
 	/* Create USART handle, this API will initialize the g_usartHandle and install the callback function. */
 	USART_TransferCreateHandle(USART, &g_usartHandle, USARTUserCallback, NULL);
-
-	/* Set the xfer parameter to send tip info to the terminal. */
-	xfer.data = g_tipString;
-	xfer.dataSize = sizeof(g_tipString) - 1;
+	NVIC_SetPriority(USART0_IRQn, 2);
 
 	/* Set xfer parameters for sending data. */
 	sendXfer.data = Uart_TxBuffer;
-	sendXfer.dataSize = sizeof(Uart_TxBuffer);
+	sendXfer.dataSize = sizeof(Uart_TxBuffer)+1;
 
 	/* Set xfers parameters for receiving data. */
 	receiveXfer.data = Uart_RxBuffer;
-	receiveXfer.dataSize = sizeof(Uart_RxBuffer);
+	receiveXfer.dataSize =6;//sizeof(Uart_RxBuffer);
 }
 
 static void  SPIMasterInit(void)
@@ -229,6 +267,8 @@ static void  SPIMasterInit(void)
 	masterConfig.baudRate_Bps = SPI_MASTER_BAUDRATE;
 	masterConfig.sselNumber = SPI_MASTER_SSEL;
 	srcFreq = SPI_MASTER_CLK_FREQ;
+	masterConfig.dataWidth =  15 ;
+	masterConfig.sselPolarity = kSPI_SpolActiveAllLow;
 	SPI_MasterInit(SPI_MASTER, &masterConfig, srcFreq);
 }
 
@@ -258,34 +298,41 @@ static void MasterStartDMATransfer(void)
 	uint32_t i = 0U;
 	dma_transfer_config_t masterTxDmaConfig, masterRxDmaConfig;
 
-	/* Prepare buffer to send and receive data. */
-	//May remove this
 	for (i = 0U; i < BUFFER_SIZE; i++)
 	{
+		//txBuffer[i] = i;
 		MotorData[i] = 0U;
 	}
 
 	/* Prepare and start DMA RX transfer. */
-	DMA_PrepareTransfer(&masterRxDmaConfig, (void *)&SPI_MASTER->RXDAT, MotorData, sizeof(uint8_t), BUFFER_SIZE,
+	DMA_PrepareTransfer(&masterRxDmaConfig, (void *)&SPI_MASTER->RXDAT, MotorData, sizeof(uint16_t), BUFFER_SIZE*2,
 			kDMA_PeripheralToMemory, NULL);
 	DMA_SubmitTransfer(&masterRxHandle, &masterRxDmaConfig);
 
 	/* Start DMA TX transfer. */
 	DMA_StartTransfer(&masterRxHandle);
 
+	/* Set the last byte to be sent, This will de-assert the SSEL pin when transmission is completed.
+	 * If users want to assert the SSEL pin when transmission is completed, there is no need to set up this descriptor.
+	 */
+	lastData = MotorUpdate[BUFFER_SIZE - 1] | kSPI_EndOfTransfer | (SPI_MASTER->TXCTL & 0xFFFF0000) ;
+
 	/* DMA transfer configuration setting. */
 	dma_xfercfg_t tmp_xfercfg = {0};
 	tmp_xfercfg.valid = true;
 	tmp_xfercfg.swtrig = true;
 	tmp_xfercfg.intA = true;
-	tmp_xfercfg.byteWidth = sizeof(uint32_t);
+	tmp_xfercfg.byteWidth = sizeof(uint16_t);
 	tmp_xfercfg.srcInc = 0;
 	tmp_xfercfg.dstInc = 0;
 	tmp_xfercfg.transferCount = 1;
 
+	/* Create chained descriptor to transmit last word */
+	DMA_CreateDescriptor(&txDescriptor, &tmp_xfercfg, &lastData, (void *)&SPI_MASTER->TXDATCTL, NULL);
+
 	/* Add confifuration parameter to descriptor. */
-	DMA_PrepareTransfer(&masterTxDmaConfig, MotorUpdate, (void *)&SPI_MASTER->TXDAT, sizeof(uint8_t),
-			BUFFER_SIZE - 1, kDMA_MemoryToPeripheral, &txDescriptor);//TODO: set tx buffer to be the received motor data
+	DMA_PrepareTransfer(&masterTxDmaConfig, MotorUpdate, (void *)&SPI_MASTER->TXDAT, sizeof(uint16_t),
+			(BUFFER_SIZE-1)*2, kDMA_MemoryToPeripheral, &txDescriptor);
 
 	/* Disable interrupts for first descriptor to avoid calling callback twice. */
 	masterTxDmaConfig.xfercfg.intA = false;
@@ -294,6 +341,8 @@ static void MasterStartDMATransfer(void)
 	DMA_SubmitTransfer(&masterTxHandle, &masterTxDmaConfig);
 
 	/* Start DMA TX transfer. */
+	GPIO_PinWrite(GPIO, 0, 24, 0);
+
 	DMA_StartTransfer(&masterTxHandle);
 }
 
